@@ -1,0 +1,12 @@
+.label {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.label__required {
+  color: #dc3545;
+  margin-left: 4px;
+}

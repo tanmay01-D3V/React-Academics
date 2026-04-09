@@ -1,0 +1,40 @@
+.radio-button {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.radio-button__input {
+  display: none;
+}
+
+.radio-button__checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  margin-right: 8px;
+  position: relative;
+  transition: border-color 0.3s;
+}
+
+.radio-button__input:checked + .radio-button__checkmark {
+  border-color: #007bff;
+}
+
+.radio-button__input:checked + .radio-button__checkmark::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  background-color: #007bff;
+  border-radius: 50%;
+}
+
+.radio-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
