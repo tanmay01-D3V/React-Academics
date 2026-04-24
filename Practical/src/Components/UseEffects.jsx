@@ -14,7 +14,7 @@ const UseEffects = () => {
         {users.map((user) => (
           <div key={user.id} className="mb-2 bg-white p-4 rounded shadow gap-2">
             <p className="text-lg font-semibold">{user.name}</p>
-            <hr className="border-"></hr>
+            <hr></hr>
             <p className="text-gray-600">{user.email}</p>
           </div>
         ))}
