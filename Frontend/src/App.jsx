@@ -1,12 +1,11 @@
 import React from 'react'
-import HeaderUpper from './components/Header/HeaderUpperPart/HeaderUpper'
-import HeaderBottom from './components/Header/HeaderBottomPart/HeaderBottom'
+import Home from './pages/Home/Home'
 
 const App = () => {
   return (
     <div>
-      <HeaderUpper />
-      <HeaderBottom />
+      <Home />
+      <image src='Frontend/src/assets/spidy.jpeg' alt='spidy' className='w-200px h-300px' />
     </div>
   )
 }
