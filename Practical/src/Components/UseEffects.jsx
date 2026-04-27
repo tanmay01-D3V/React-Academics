@@ -1,4 +1,4 @@
-import {useState,useEffect} from "react";
+import { useState, useEffect } from "react";
 
 const UseEffects = () => {
   const [users, setUser] = useState([]);
@@ -9,15 +9,17 @@ const UseEffects = () => {
   }, []);
   return (
     <>
-      <div className="text-left p-8 bg-purple-200">
-        <h1 className="text-3xl font-bold mb-4 align-center text-center bg-purple-300">UseEffect Hook</h1>
-        {users.map((user) => (
-          <div key={user.id} className="mb-2 bg-white p-4 rounded shadow gap-2">
-            <p className="text-lg font-semibold">{user.name}</p>
-            <hr></hr>
-            <p className="text-gray-600">{user.email}</p>
-          </div>
-        ))}
+      <div className="text-left p-8 bg-purple-100 dark:bg-slate-800 transition-colors duration-300">
+        <h1 className="text-3xl font-bold mb-4 align-center text-center bg-purple-200 dark:bg-slate-700 p-2 rounded dark:text-white">UseEffect Hook</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {users.map((user) => (
+            <div key={user.id} className="mb-2 bg-white dark:bg-slate-700 p-4 rounded shadow-md border border-transparent dark:border-slate-600 transition-colors duration-300">
+              <p className="text-lg font-semibold dark:text-white">{user.name}</p>
+              <hr className="my-2 border-slate-200 dark:border-slate-600"></hr>
+              <p className="text-gray-600 dark:text-slate-300">{user.email}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );
