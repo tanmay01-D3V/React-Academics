@@ -11,7 +11,6 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
-    // Apply theme class to html element for Tailwind/CSS scoping
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
