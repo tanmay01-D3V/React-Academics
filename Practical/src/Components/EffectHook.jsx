@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 const EffectHook = () => {
   const [users, setUser] = useState([]);
@@ -8,21 +7,17 @@ const EffectHook = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch real users from India using GitHub Search API
-      // We pick a random page to get a different user each time
-      const randomPage = Math.floor(Math.random() * 100) + 1;
       const response = await fetch(
-        `https://api.github.com/search/users?q=location:india&page=${randomPage}&per_page=1`,
+        "https://randomuser.me/api",
       );
       const data = await response.json();
 
-      if (data.items && data.items.length > 0) {
-        const item = data.items[0];
-        // Format the data to match your component's expectation
+      if (data.results && data.results.length > 0) {
+        const user = data.results[0];
         setUser([
           {
-            name: { first: item.login, last: "" },
-            picture: { medium: item.avatar_url },
+            name: { first: user.name.first, last: user.name.last },
+            picture: { medium: user.picture.large },
           },
         ]);
       }
@@ -59,44 +54,63 @@ const EffectHook = () => {
   };
 
   return (
-    <div className="main dark:bg-slate-900 transition-colors duration-300">
+    <div className="main flex justify-center items-center py-10 px-4 transition-colors duration-300">
       {loading ? (
-        <div className="loading flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-          <p className="ml-4 text-xl dark:text-white">Loading...</p>
+        <div className="loading flex flex-col justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
+          <p className="mt-6 text-xl font-medium text-slate-500 dark:text-slate-400 animate-pulse">Finding a match...</p>
         </div>
       ) : (
         users.map((user, index) => (
-          <div key={index} className="user_profile max-w-md mx-auto my-10 mb-10 overflow-hidden bg-white dark:bg-slate-800 rounded-2xl shadow-xl transition-colors duration-300">
-            <p className="bg-violet-200 dark:bg-indigo-900 text-slate-800 dark:text-white text-3xl font-bold text-center p-6">
-              {user.name.first} {user.name.last}
-            </p>
+          <div 
+            key={index} 
+            className="user_profile w-full max-w-sm bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 dark:border-slate-700/50 overflow-hidden transform transition-all duration-500 hover:scale-[1.02]"
+          >
+            <div className="relative h-48 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+              <div className="absolute inset-0 bg-black/10"></div>
+            </div>
 
-            <div className="flex items-center justify-center gap-8 py-8 px-4">
-              <button
-                type="button"
-                onClick={(e) => handleAction(e, "pass")}
-                className="passbutton bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
-              >
-                Pass
-              </button>
-
-              <div className="profileimage relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                <img
-                  className="relative w-40 h-40 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg"
-                  src={user.picture.medium}
-                  alt="user"
-                />
+            <div className="relative px-6 pb-10">
+              <div className="flex justify-center -mt-24 mb-6">
+                <div className="profileimage relative p-1.5 bg-white dark:bg-slate-700 rounded-full shadow-2xl">
+                  <div className="absolute -inset-2 bg-gradient-to-tr from-indigo-500 to-pink-500 rounded-full blur-sm opacity-50"></div>
+                  <img
+                    className="relative w-40 h-40 rounded-full object-cover border-4 border-white dark:border-slate-800"
+                    src={user.picture.medium}
+                    alt="user"
+                  />
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={(e) => handleAction(e, "smash")}
-                className="smashbutton bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
-              >
-                Smash
-              </button>
+              <div className="text-center mb-10">
+                <h2 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+                  {user.name.first} {user.name.last}
+                </h2>
+              </div>
+
+              <div className="flex items-center justify-between gap-6">
+                <button
+                  type="button"
+                  onClick={(e) => handleAction(e, "pass")}
+                  className="group relative flex-1"
+                >
+                  <div className="absolute -inset-0.5 bg-red-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+                  <div className="relative flex items-center justify-center bg-white dark:bg-slate-900 border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-6 py-4 rounded-2xl font-black text-lg shadow-sm transition-all duration-300 active:scale-95">
+                    PASS
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => handleAction(e, "smash")}
+                  className="group relative flex-1"
+                >
+                  <div className="absolute -inset-0.5 bg-emerald-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+                  <div className="relative flex items-center justify-center bg-emerald-500 text-white px-6 py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-emerald-600 transition-all duration-300 active:scale-95 hover:shadow-emerald-500/25 hover:shadow-xl">
+                    SMASH
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         ))
