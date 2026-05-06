@@ -1,9 +1,9 @@
-import ReferenceHook from './Components/ReferenceHook'
+import UseCallbackLab from './Components/useCallback'
 
 const App = () => {
   return (
     <div className='bg-purple-300'>
-      <ReferenceHook />
+      <UseCallbackLab />
     </div>
   )
 }
