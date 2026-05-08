@@ -3,11 +3,13 @@ import Navbar from "./components/navbar"
 import History from "./pages/History"
 import Home from "./pages/Home"
 import Planner from "./pages/Planner"
+import Report from "./pages/Report"
 import Profile from "./pages/Profile"
 
 const routes = [
   { path: "#/", label: "Home", component: Home },
   { path: "#/planner", label: "Planner", component: Planner },
+  { path: "#/report", label: "Report", component: Report },
   { path: "#/history", label: "History", component: History },
   { path: "#/profile", label: "Profile", component: Profile },
 ]
