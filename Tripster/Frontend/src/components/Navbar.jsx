@@ -1,3 +1,4 @@
+import React from 'react'
 import Logo from '../assets/Logo.png';
 
 const Navbar = ({ navItems = [], activePath = '#/' }) => {
@@ -40,3 +41,4 @@ const Navbar = ({ navItems = [], activePath = '#/' }) => {
 }
 
 export default Navbar
+

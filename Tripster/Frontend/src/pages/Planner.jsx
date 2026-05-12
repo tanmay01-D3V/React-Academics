@@ -1,3 +1,4 @@
+import React from 'react'
 import { useEffect, useMemo, useState } from "react"
 import airplane from "../assets/airplane-fill.svg"
 import { fetchFlightPriceByCoords } from "../api/flightsApi"

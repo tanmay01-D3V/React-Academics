@@ -1,3 +1,5 @@
+import React from 'react'
+
 const columns = [
   ['Product', 'Trip calculator', 'GST tracker', 'Currency forecast', 'Family split'],
   ['Company', 'About TripSter', 'Careers', 'Travel partners', 'Press kit'],

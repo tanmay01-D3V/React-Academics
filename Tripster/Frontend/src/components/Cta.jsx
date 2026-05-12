@@ -1,3 +1,4 @@
+import React from 'react' 
 import car from '../assets/car-front.svg';
 import airplane from '../assets/airplane-fill.svg';
 import world from '../assets/world-2-fill.svg';
