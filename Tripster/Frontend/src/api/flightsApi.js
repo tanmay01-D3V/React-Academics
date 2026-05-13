@@ -1,96 +1,125 @@
-const GEO_SEARCH = (name) => `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=en&format=json`
+import { distanceKm, toINR } from './core.js'
 
-const toRad = (value) => (value * Math.PI) / 180
-const distanceKm = (a, b) => {
-	const dLat = toRad(b.latitude - a.latitude)
-	const dLon = toRad(b.longitude - a.longitude)
-	const lat1 = toRad(a.latitude)
-	const lat2 = toRad(b.latitude)
-	const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2
-	return Math.round(6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)))
+const airportByCity = {
+  abu_dhabi: 'AUH',amsterdam: 'AMS',bangkok: 'BKK',barcelona: 'BCN',beijing: 'PEK',belgium: 'BRU',bengaluru: 'BLR',berlin: 'BER',brussels: 'BRU',
+  chennai: 'MAA',delhi: 'DEL',dubai: 'DXB',frankfurt: 'FRA',goa: 'GOI',hong_kong: 'HKG',jaipur: 'JAI',jakarta: 'CGK',kuala_lumpur: 'KUL',
+  london: 'LHR',os_angeles: 'LAX',madrid: 'MAD',mandalay: 'MDL',mumbai: 'BOM',myanmar: 'RGN',new_delhi: 'DEL',new_york: 'JFK',paris: 'CDG',
+  pattaya: 'BKK',rome: 'FCO',singapore: 'SIN',sydney: 'SYD',tokyo: 'HND',yangon: 'RGN',
 }
 
-export async function getCoords(placeName) {
-	if (!placeName) return null
-	try {
-		const res = await fetch(GEO_SEARCH(placeName)).then((r) => r.json())
-		return res.results?.[0] || null
-	} catch (err) {
-		return null
-	}
+const airportByCountry = {AE: 'DXB',BE: 'BRU',GB: 'LHR',IN: 'DEL',MM: 'RGN',SG: 'SIN',TH: 'BKK',US: 'JFK',FR: 'CDG',DE: 'FRA',ES: 'MAD',IT: 'FCO',NL: 'AMS',CN: 'PEK',AU: 'SYD'}
+
+const normalizeKey = (value = '') =>
+  value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+const getAirportCode = (place) => {
+  const candidates = [
+    place?.iata,
+    place?.iata_code,
+    place?.airportCode,
+    airportByCity[normalizeKey(place?.name)],
+    airportByCity[normalizeKey(place?.admin1)],
+    airportByCity[normalizeKey(place?.country)],
+    airportByCountry[(place?.country_code || '').toUpperCase()],
+  ]
+
+  return candidates.find((code) => typeof code === 'string' && /^[A-Z]{3}$/.test(code)) || null
+}
+
+const nextTravelDate = () => {
+  const date = new Date()
+  date.setDate(date.getDate() + 1)
+  return date.toISOString().slice(0, 10)
+}
+
+const findPrices = (value, prices = []) => {
+  if (!value || typeof value !== 'object') return prices
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => findPrices(item, prices))
+    return prices
+  }
+
+  Object.entries(value).forEach(([key, entry]) => {
+    const normalizedKey = key.toLowerCase()
+    const isPriceKey = /price|fare|amount|total|cost/.test(normalizedKey)
+
+    if (isPriceKey) {
+      if (typeof entry === 'number') prices.push(entry)
+      if (typeof entry === 'string') {
+        const parsed = Number(entry.replace(/[^0-9.]/g, ''))
+        if (parsed) prices.push(parsed)
+      }
+    }
+
+    if (entry && typeof entry === 'object') findPrices(entry, prices)
+  })
+
+  return prices
 }
 
 export async function fetchFlightPriceByCoords(origin, destination, travelers = 1) {
-	if (!origin || !destination) return null
+  if (!origin || !destination) return null
 
-	// Try external API if configured
-	const apiUrl = import.meta.env.VITE_FLIGHT_API_URL
-	const rapidKey = import.meta.env.VITE_RAPIDAPI_KEY
-	const rapidHost = import.meta.env.VITE_RAPIDAPI_HOST
+  const apiUrl = import.meta.env.VITE_FLIGHT_API_URL
+  const from = getAirportCode(origin)
+  const to = getAirportCode(destination)
 
-	if (apiUrl) {
-		try {
-			const params = new URLSearchParams({
-				orig_lat: String(origin.latitude),
-				orig_lon: String(origin.longitude),
-				dest_lat: String(destination.latitude),
-				dest_lon: String(destination.longitude),
-				travelers: String(travelers || 1),
-			})
+  if (apiUrl) {
+    try {
+      const params = new URLSearchParams({
+        from: from || '',
+        to: to || '',
+        date: import.meta.env.VITE_FLIGHT_DEPARTURE_DATE || nextTravelDate(),
+        adult: String(travelers || 1),
+        child: '0',
+        infant: '0',
+        type: 'economy',
+        currency: 'INR',
+      })
 
-			const headers = { 'Content-Type': 'application/json' }
-			if (rapidKey) headers['x-rapidapi-key'] = rapidKey
-			if (rapidHost) headers['x-rapidapi-host'] = rapidHost
+      const headers = { 'Content-Type': 'application/json' }
+      const rapidKey = import.meta.env.VITE_RAPIDAPI_KEY
+      const rapidHost = import.meta.env.VITE_RAPIDAPI_HOST
+      if (rapidKey) headers['x-rapidapi-key'] = rapidKey
+      if (rapidHost) headers['x-rapidapi-host'] = rapidHost
 
-			const res = await fetch(`${apiUrl}?${params.toString()}`, { headers })
-			if (res.ok) {
-				const data = await res.json()
-				// Expecting { price: number, currency: 'USD' } or similar from upstream API.
-				if (data && typeof data.price === 'number') {
-					// Convert returned currency to INR so the app is India-first.
-					let priceInINR = data.price
-					const returnedCurrency = (data.currency || 'USD').toUpperCase()
-					if (returnedCurrency !== 'INR') {
-						try {
-							// Best-effort conversion via public currency API
-							const code = returnedCurrency.toLowerCase()
-							const urls = [
-								`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${code}.json`,
-								`https://latest.currency-api.pages.dev/v1/currencies/${code}.json`,
-							]
-							for (const url of urls) {
-								try {
-									const d = await fetch(url).then((r) => r.json())
-									if (d[code]?.inr) {
-										priceInINR = data.price * d[code].inr
-										break
-									}
-								} catch {
-									// try next
-								}
-							}
-						// if conversion failed, leave priceInINR as original price
-						priceInINR = Math.round(priceInINR)
-					} catch (e) {
-						// ignore conversion errors
-					}
-					}
-					return { price: data.price, currency: returnedCurrency, priceInINR, source: 'api' }
-				}
-			}
-		} catch (err) {
-			// Fall through to estimate
-		}
-	}
+      if (apiUrl && rapidKey && rapidHost && from && toz) {
+        const res = await fetch(`${apiUrl}?${params}`, { headers })
+        if (!res.ok) throw new Error('Flight fare API request failed')
 
-	// Fallback: deterministic estimate based on great-circle distance
-	const km = distanceKm(origin, destination)
-	// Simple estimate: base per-traveler fare scales with distance
-	const price = Math.max(Math.round(km * 12), 1500)
-	return { price, currency: 'INR', priceInINR: price, source: 'estimate' }
-}
+        const data = await res.json()
+        if (typeof data?.price === 'number') {
+          const currency = (data.currency || 'USD').toUpperCase()
+          const oneWayPriceInINR = await toINR(data.price, currency)
+          const priceInINR = oneWayPriceInINR * 2
+          return { price: data.price * 2, currency, priceInINR, source: 'api round trip' }
+        }
 
-export default {
-	getCoords,
-	fetchFlightPriceByCoords,
+        const prices = findPrices(data).filter((price) => price > 0)
+        const oneWayPrice = prices.length ? Math.min(...prices) : null
+        if (oneWayPrice) {
+          const priceInINR = Math.round(oneWayPrice * 2)
+          return { price: priceInINR, currency: 'INR', priceInINR, source: 'api round trip' }
+        }
+      }
+    } catch {
+      // Fall through to route-based estimate.
+    }
+  }
+
+  const km = distanceKm(origin, destination)
+  const domestic = Boolean(
+    origin.country_code &&
+    destination.country_code &&
+    origin.country_code === destination.country_code
+  )
+  const oneWayEstimate = Math.max(km * (domestic ? 5 : 7), domestic ? 2500 : 12000)
+  const priceInINR = Math.round(oneWayEstimate * 2)
+  return { price: priceInINR, currency: 'INR', priceInINR, source: 'round trip estimate' }
 }

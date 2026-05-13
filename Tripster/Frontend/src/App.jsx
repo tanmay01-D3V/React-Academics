@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import Navbar from "./components/navbar"
+import Navbar from "./components/Navbar"
 import History from "./pages/History"
 import Home from "./pages/Home"
 import Planner from "./pages/Planner"
